@@ -1,0 +1,50 @@
+name: Terraform Validation and Plan
+
+on:
+  push:
+    paths:
+      - '**'
+  pull_request:
+    branches: [main, master]
+
+env:
+  AWS_REGION : "us-west-1"
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Terraform setup
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.4
+
+      - name: Assume AWS IAM Role
+        uses: aws-actions/configure-aws-credentials@v4.0.1
+        with: 
+          role-to-assume: arn:aws:iam::423291775617:role/GitHubAction-AssumeRoleWithAction
+          role-session-name: GitHub_to_AWS_via_FederatedOIDC
+          aws-region: ${{env.AWS_REGION}}
+        continue-on-error: false
+
+      - name: Assume Role Failure
+        if: failure()
+        run: |
+          echo "job failed"
+          aws sts get-caller-identity
+
+      - name: Terraform Init
+        id: init
+        run: terraform init
+
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan
+        continue-on-error: false
