@@ -7,7 +7,7 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_subnet" "public_subnet" {
-  cidr_block = "172.20.0.0/25"
+  cidr_block = "172.0.0.0/25"
   vpc_id = aws_vpc.main.id
 
   tags = {

@@ -6,7 +6,7 @@ terraform {
     }
   }
 
-  required_version = ">= 1.2.0"
+  required_version = ">= 1.6.4"
 }
 
 provider "aws" {
@@ -14,5 +14,5 @@ provider "aws" {
 }
 
 module "name" {
-  source = "./lambda"
+  source = "./aws_resources"
 }
