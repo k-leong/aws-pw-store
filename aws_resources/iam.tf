@@ -10,7 +10,7 @@ resource "aws_iam_policy" "iam_for_lambda" {
           "kms:encrypt",
           "kms:decrypt",
         ]
-        Effect = "Allow"
+        Effect   = "Allow"
         Resource = "*"
       }
     ]
@@ -22,7 +22,7 @@ data "aws_iam_policy_document" "assume_role" {
     effect = "Allow"
 
     principals {
-      type = "Service"
+      type        = "Service"
       identifiers = ["lambda.amazonaws.com"]
     }
     actions = ["sts:AssumeRole"]
@@ -30,12 +30,12 @@ data "aws_iam_policy_document" "assume_role" {
 }
 
 resource "aws_iam_role" "iam_role_for_lambda" {
-  name = "iam_role_for_lambda"
+  name               = "iam_role_for_lambda"
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 resource "aws_iam_policy_attachment" "iam-lambda-attach" {
-  name = "lambda-attachment"
-  roles = [ aws_iam_role.iam_role_for_lambda.name  ]
+  name       = "lambda-attachment"
+  roles      = [aws_iam_role.iam_role_for_lambda.name]
   policy_arn = aws_iam_policy.iam_for_lambda.arn
 }

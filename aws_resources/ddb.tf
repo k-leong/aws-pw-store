@@ -1,7 +1,8 @@
 resource "aws_dynamodb_table" "dynamodb-table" {
-  name = "PasswordStore"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key = "PassKey"
+  name                        = "PasswordStore"
+  billing_mode                = "PAY_PER_REQUEST"
+  hash_key                    = "PassKey"
+  deletion_protection_enabled = true
   attribute {
     name = "PassKey"
     type = "S"
@@ -9,14 +10,14 @@ resource "aws_dynamodb_table" "dynamodb-table" {
 
   tags = {
     Name = "PasswordStore"
-    Environment = "Dev"
   }
 }
 
 resource "aws_dynamodb_table" "dynamodb-table-2" {
-  name = "SaltStore"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key = "SaltKey"
+  name                        = "SaltStore"
+  billing_mode                = "PAY_PER_REQUEST"
+  hash_key                    = "SaltKey"
+  deletion_protection_enabled = true
   attribute {
     name = "SaltKey"
     type = "S"
@@ -24,6 +25,5 @@ resource "aws_dynamodb_table" "dynamodb-table-2" {
 
   tags = {
     Name = "SaltStore"
-    Environment = "Dev"
   }
 }

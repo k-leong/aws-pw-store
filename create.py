@@ -1,6 +1,7 @@
 import boto3
 import json
-import os
+import secrets
+import base64
 
 dynamodb = boto3.resource('dynamodb')
 kms = boto3.client('kms')
@@ -8,32 +9,31 @@ store = dynamodb.Table('store')
 salt = dynamodb.Table('salt')
 
 def lambda_handler(event, context):
-    # password = event['password']
-    # account = event['account']
-    # salt = os.urandom(16)
-    # salted_password = password + salt
-    # # encrypt salted_password using kms
-    # encrypted_password = kms.encrypt(
-    #     KeyId='alias/password_key',
-    #     Plaintext=salted_password,
-    #     EncryptionContext={
-    #         'account': account
-    #     }
-    # )
-
-    # store.put_item(
-    #     Item={
-    #         'password_id': str(hash(password + account)),
-    #         'password': salted_password,
-    #         'account': account
-    #     }
-    # )
-    # salt.put_item(
-    #     Item={
-    #         'salt_id': str(hash(salt)),
-    #         'salt': salt
-    #     }
-    # )
+    account = event['account']
+    password = event['password']
+    # need to base64 encode before storing into ddb
+    pw_salt = secrets.token_hex(16)
+    salted = password + pw_salt
+    encrypted_password = kms.encrypt(
+        KeyId='arn:aws:kms:us-west-1:xxx:key/xxx',
+        Plaintext=salted.encode('utf-8')
+    )['CiphertextBlob']
+    
+    print(encrypted_password)
+    encoded_encrypted_password = base64.b64encode(encrypted_password).decode('utf-8')
+    
+    store.put_item(
+        Item={
+            'account': account,
+            'password': encoded_encrypted_password
+        }
+    )
+    
+    salt.put_item(
+        Item={
+            'account': account,
+            'salt': pw_salt
+        })
     return {
         'statusCode': 200,
         'body': json.dumps('Password successfully stored')

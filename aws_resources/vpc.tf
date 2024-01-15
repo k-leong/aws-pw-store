@@ -1,44 +1,104 @@
+# need to add route tables
+
 resource "aws_vpc" "main" {
-  cidr_block = "172.0.0.0/16"
+  cidr_block = "10.0.0.0/16"
 
   tags = {
     Name = "main"
   }
 }
 
-resource "aws_subnet" "public_subnet" {
-  cidr_block = "172.0.0.0/25"
-  vpc_id = aws_vpc.main.id
-
+resource "aws_subnet" "public_subnet1" {
+  cidr_block        = "10.0.0.0/20"
+  vpc_id            = aws_vpc.main.id
+  availability_zone = "us-west-1b"
   tags = {
-    Name = "public"
+    Name = "public 1"
   }
 }
 
-output "subnet_id" {
-  value = aws_subnet.public_subnet.id
+resource "aws_subnet" "private_subnet1" {
+  cidr_block        = "10.0.128.0/20"
+  vpc_id            = aws_vpc.main.id
+  availability_zone = "us-west-1b"
+  tags = {
+    Name = "private 1"
+  }
+}
+
+resource "aws_subnet" "public_subnet2" {
+  cidr_block        = "10.0.16.0/20"
+  vpc_id            = aws_vpc.main.id
+  availability_zone = "us-west-1c"
+  tags = {
+    Name = "public 2"
+  }
+}
+
+resource "aws_subnet" "private_subnet2" {
+  cidr_block        = "10.0.144.0/20"
+  vpc_id            = aws_vpc.main.id
+  availability_zone = "us-west-1c"
+  tags = {
+    Name = "private 2"
+  }
+}
+
+resource "aws_vpc_endpoint" "dynamodb" {
+  vpc_id       = aws_vpc.main.id
+  service_name = "com.amazonaws.us-west-1.dynamodb"
+  tags = {
+    Name = "dynamodb endpoint"
+  }
+}
+
+resource "aws_vpc_endpoint" "kms" {
+  vpc_endpoint_type = "Interface"
+  vpc_id            = aws_vpc.main.id
+  service_name      = "com.amazonaws.us-west-1.kms"
+  subnet_ids        = [aws_subnet.private_subnet1.id, aws_subnet.private_subnet2.id]
+  tags = {
+    Name = "kms endpoint"
+  }
 }
 
 resource "aws_security_group" "sg" {
-  name = "sg"
+  name   = "sg"
   vpc_id = aws_vpc.main.id
 
   ingress {
     description = ""
-    from_port = 443
-    to_port = 443
-    protocol = "tcp"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
-
-output "sg_id" {
-  value = aws_security_group.sg.id
+# need to use association?
+resource "aws_route_table" "private1" {
+  vpc_id = aws_vpc.main.id
+  route {
+    cidr_block = aws_subnet.private_subnet1.cidr_block
+    vpc_endpoint_id = aws_vpc_endpoint.dynamodb.id
+  }
+  tags = {
+    Name = "private1 rt"
+  }
+  depends_on = [ aws_vpc_endpoint.dynamodb ]
 }
+# data "aws_route_table" "private1" {
+#   subnet_id = aws_subnet.private_subnet1.id
+# }
+
+# resource "aws_route" "private1_route" {
+#   route_table_id = data.aws_route_table.private1.id
+#   destination_cidr_block = aws_subnet.private_subnet1.cidr_block
+#   vpc_endpoint_id = aws_vpc_endpoint.kms.id
+# }
