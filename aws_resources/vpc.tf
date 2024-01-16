@@ -62,43 +62,54 @@ resource "aws_vpc_endpoint" "kms" {
   }
 }
 
-resource "aws_security_group" "sg" {
-  name   = "sg"
-  vpc_id = aws_vpc.main.id
+# resource "aws_security_group" "sg" {
+#   name   = "sg"
+#   vpc_id = aws_vpc.main.id
 
-  ingress {
-    description = ""
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+#   ingress {
+#     description = ""
+#     from_port   = 443
+#     to_port     = 443
+#     protocol    = "tcp"
+#     cidr_blocks = ["0.0.0.0/0"]
+#   }
 
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-# need to use association?
+#   egress {
+#     from_port   = 0
+#     to_port     = 0
+#     protocol    = "-1"
+#     cidr_blocks = ["0.0.0.0/0"]
+#   }
+# }
+
 resource "aws_route_table" "private1" {
   vpc_id = aws_vpc.main.id
-  route {
-    cidr_block = aws_subnet.private_subnet1.cidr_block
-    vpc_endpoint_id = aws_vpc_endpoint.dynamodb.id
-  }
+
   tags = {
     Name = "private1 rt"
   }
-  depends_on = [ aws_vpc_endpoint.dynamodb ]
 }
-# data "aws_route_table" "private1" {
-#   subnet_id = aws_subnet.private_subnet1.id
-# }
 
-# resource "aws_route" "private1_route" {
-#   route_table_id = data.aws_route_table.private1.id
-#   destination_cidr_block = aws_subnet.private_subnet1.cidr_block
-#   vpc_endpoint_id = aws_vpc_endpoint.kms.id
-# }
+resource "aws_route_table" "private2" {
+  vpc_id = aws_vpc.main.id
+
+  tags = {
+    Name = "private2 rt"
+  }
+}
+
+resource "aws_vpc_endpoint_route_table_association" "ddb_route" {
+  route_table_id  = aws_route_table.private1.id
+  vpc_endpoint_id = aws_vpc_endpoint.dynamodb.id
+}
+
+resource "aws_route_table_association" "ddb_private_route1" {
+  subnet_id      = aws_subnet.private_subnet1.id
+  route_table_id = aws_route_table.private1.id
+}
+
+resource "aws_route_table_association" "ddb_private_route2" {
+  subnet_id      = aws_subnet.private_subnet2.id
+  route_table_id = aws_route_table.private2.id
+}
+

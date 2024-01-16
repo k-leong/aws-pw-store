@@ -16,7 +16,7 @@ resource "aws_lambda_function" "create-function" {
   # }
   environment {
     variables = {
-      kms_id = aws_kms_key.kms.id
+      KeyId = aws_kms_key.kms.id
     }
   }
 
@@ -40,7 +40,7 @@ resource "aws_lambda_function" "retrieve-function" {
   # }
   environment {
     variables = {
-      kms_id = aws_kms_key.kms.id
+      KeyId = aws_kms_key.kms.id
     }
   }
 

@@ -1,6 +1,7 @@
 import boto3
 import json
 import base64
+import os
 
 dynamodb = boto3.resource('dynamodb')
 kms = boto3.client('kms')
